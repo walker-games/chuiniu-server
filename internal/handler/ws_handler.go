@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -69,8 +70,15 @@ func (h *WSHandler) Handle(c *gin.Context) {
 	go client.WritePump()
 	go client.ReadPump()
 
-	// Broadcast full room state to ALL players (so everyone sees the new player)
-	h.hub.BroadcastRoomState(room)
+	// Send room state directly to the new client (don't rely on broadcast — Register is async)
+	state := h.hub.BuildRoomStateForPlayer(room, userID)
+	client.SendMessage(ws.NewMessage(ws.MsgRoomState, state))
+
+	// Broadcast to existing players after a short delay so Register completes
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		h.hub.BroadcastRoomState(room)
+	}()
 }
 
 // Client wraps ws.Client for the handler package.
