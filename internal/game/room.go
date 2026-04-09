@@ -93,11 +93,11 @@ func DefaultSettings() RoomSettings {
 		MaxPlayers:    8,
 		DicePerPlayer: 5,
 		Punishments: []Punishment{
-			{Text: "喝一杯", Level: 1, Weight: 40},
-			{Text: "喝两杯", Level: 2, Weight: 20},
-			{Text: "真心话", Level: 1, Weight: 20},
-			{Text: "大冒险", Level: 2, Weight: 15},
-			{Text: "连喝三杯", Level: 3, Weight: 5},
+			{Text: "飲一杯", Level: 1, Weight: 40},
+			{Text: "飲兩杯", Level: 2, Weight: 20},
+			{Text: "真心話", Level: 1, Weight: 20},
+			{Text: "大冒險", Level: 2, Weight: 15},
+			{Text: "連飲三杯", Level: 3, Weight: 5},
 		},
 	}
 }
