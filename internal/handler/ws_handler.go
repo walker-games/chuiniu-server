@@ -69,15 +69,8 @@ func (h *WSHandler) Handle(c *gin.Context) {
 	go client.WritePump()
 	go client.ReadPump()
 
-	// Send initial room state
-	state := h.hub.BuildRoomStateForPlayer(room, userID)
-	client.SendMessage(ws.NewMessage(ws.MsgRoomState, state))
-
-	// Broadcast player joined
-	h.hub.BroadcastToRoom(roomID, ws.NewMessage(ws.MsgPlayerJoined, map[string]interface{}{
-		"player_id": userID,
-		"name":      username,
-	}))
+	// Broadcast full room state to ALL players (so everyone sees the new player)
+	h.hub.BroadcastRoomState(room)
 }
 
 // Client wraps ws.Client for the handler package.

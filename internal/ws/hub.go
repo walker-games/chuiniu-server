@@ -149,7 +149,7 @@ func (h *Hub) handleReady(c *Client, data json.RawMessage) {
 	room.SetReady(c.PlayerID, rd.Ready)
 
 	// Broadcast updated room state to all players
-	h.broadcastRoomState(room)
+	h.BroadcastRoomState(room)
 
 	// Auto-start if all ready
 	if room.AllReady() {
@@ -157,7 +157,7 @@ func (h *Hub) handleReady(c *Client, data json.RawMessage) {
 		h.BroadcastToRoom(c.RoomID, NewMessage(MsgGameStart, map[string]interface{}{
 			"round": room.RoundNum,
 		}))
-		h.broadcastRoomState(room)
+		h.BroadcastRoomState(room)
 	}
 }
 
@@ -189,7 +189,7 @@ func (h *Hub) handleRoll(c *Client) {
 		h.BroadcastToRoom(c.RoomID, NewMessage(MsgAllRolled, map[string]interface{}{
 			"turn_player_id": room.CurrentTurnPlayerID(),
 		}))
-		h.broadcastRoomState(room)
+		h.BroadcastRoomState(room)
 	}
 }
 
@@ -243,7 +243,7 @@ func (h *Hub) handleBid(c *Client, data json.RawMessage) {
 		"turn_player_id": room.CurrentTurnPlayerID(),
 	}))
 
-	h.broadcastRoomState(room)
+	h.BroadcastRoomState(room)
 }
 
 func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
@@ -320,7 +320,7 @@ func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
 		p.Rolled = false
 	}
 
-	h.broadcastRoomState(room)
+	h.BroadcastRoomState(room)
 }
 
 func (h *Hub) handleEmoji(c *Client, data json.RawMessage) {
@@ -336,7 +336,7 @@ func (h *Hub) handleEmoji(c *Client, data json.RawMessage) {
 	}))
 }
 
-func (h *Hub) broadcastRoomState(room *game.Room) {
+func (h *Hub) BroadcastRoomState(room *game.Room) {
 	h.mu.RLock()
 	clients, ok := h.rooms[room.ID]
 	h.mu.RUnlock()
