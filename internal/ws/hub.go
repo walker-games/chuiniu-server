@@ -170,7 +170,11 @@ func (h *Hub) handleReady(c *Client, data json.RawMessage) {
 
 	// Auto-start if all ready
 	if room.AllReady() {
-		room.StartRound(room.Host)
+		firstPlayer := room.LastLoser
+		if firstPlayer == "" {
+			firstPlayer = room.Host
+		}
+		room.StartRound(firstPlayer)
 		h.BroadcastToRoom(c.RoomID, NewMessage(MsgGameStart, map[string]interface{}{
 			"round": room.RoundNum,
 		}))
@@ -327,6 +331,9 @@ func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
 
 	// Async log
 	go h.LogService.SaveRound(room, allDice, c.PlayerID, winner, loser, punishment)
+
+	// Record last loser for next round first-caller
+	room.LastLoser = loser
 
 	// Reset room to waiting
 	room.Status = game.StatusWaiting

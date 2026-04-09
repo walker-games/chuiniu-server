@@ -36,6 +36,7 @@ type Room struct {
 	ID         string       `json:"id"`
 	Code       string       `json:"code"`
 	Host       string       `json:"host"`
+	LastLoser  string       `json:"last_loser"`
 	Players    []*Player    `json:"players"`
 	Status     RoomStatus   `json:"status"`
 	Round      *Round       `json:"round"`
