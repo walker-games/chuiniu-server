@@ -24,7 +24,16 @@ func (h *RoomHandler) Create(c *gin.Context) {
 		return
 	}
 
-	avatar := "" // avatar can be extended later
+	// Accept name from request body or query
+	var req struct {
+		Name string `json:"name"`
+	}
+	c.ShouldBindJSON(&req)
+	if req.Name != "" {
+		username = req.Name
+	}
+
+	avatar := ""
 	room := h.manager.CreateRoom(userID, username, avatar)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -53,6 +62,7 @@ func (h *RoomHandler) Get(c *gin.Context) {
 
 type JoinRequest struct {
 	Code string `json:"code" binding:"required"`
+	Name string `json:"name"`
 }
 
 func (h *RoomHandler) Join(c *gin.Context) {
@@ -64,6 +74,9 @@ func (h *RoomHandler) Join(c *gin.Context) {
 
 	userID := middleware.GetUserID(c)
 	username := middleware.GetUsername(c)
+	if req.Name != "" {
+		username = req.Name
+	}
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not identified"})
 		return

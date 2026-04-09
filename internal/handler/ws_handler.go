@@ -32,7 +32,10 @@ func NewWSHandler(hub *ws.Hub, manager *game.RoomManager) *WSHandler {
 func (h *WSHandler) Handle(c *gin.Context) {
 	roomID := c.Param("roomId")
 	userID := middleware.GetUserID(c)
-	username := middleware.GetUsername(c)
+	username := c.Query("name") // Client passes real name via query param
+	if username == "" {
+		username = middleware.GetUsername(c) // Fallback to auth-derived name
+	}
 
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not identified"})
