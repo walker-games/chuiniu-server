@@ -29,7 +29,8 @@ func SetupRouter(cfg *config.Config, manager *game.RoomManager, hub *ws.Hub, log
 	// Auth middleware
 	var authMiddleware gin.HandlerFunc
 	if cfg.IAM.JWKSURL != "" {
-		authMiddleware = middleware.NewIAMAuth(cfg.IAM.JWKSURL).Middleware()
+		allowDev := cfg.App.Env != "production"
+		authMiddleware = middleware.NewIAMAuth(cfg.IAM.JWKSURL, allowDev).Middleware()
 	} else {
 		authMiddleware = middleware.NewLocalAuth("dev-secret").Middleware()
 	}

@@ -20,10 +20,11 @@ type IAMAuth struct {
 	publicKey *rsa.PublicKey
 	mu        sync.RWMutex
 	lastFetch time.Time
+	allowDev  bool
 }
 
-func NewIAMAuth(jwksURL string) *IAMAuth {
-	return &IAMAuth{jwksURL: jwksURL}
+func NewIAMAuth(jwksURL string, allowDev bool) *IAMAuth {
+	return &IAMAuth{jwksURL: jwksURL, allowDev: allowDev}
 }
 
 func (a *IAMAuth) Middleware() gin.HandlerFunc {
@@ -33,6 +34,16 @@ func (a *IAMAuth) Middleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
 			return
 		}
+
+		// Dev token bypass (non-production only)
+		if a.allowDev && strings.HasPrefix(tokenStr, "dev-") {
+			userID := tokenStr[4:] // strip "dev-" prefix
+			c.Set("user_id", userID)
+			c.Set("username", "Dev_"+userID)
+			c.Next()
+			return
+		}
+
 		key, err := a.getPublicKey()
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "auth service unavailable"})
