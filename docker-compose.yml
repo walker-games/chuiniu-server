@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  chuiniu-server:
+    build: .
+    container_name: chuiniu-server
+    ports:
+      - "8092:8092"
+    environment:
+      - CHUINIU_DATABASE_HOST=host.docker.internal
+      - CHUINIU_DATABASE_PORT=3306
+      - CHUINIU_DATABASE_USER=root
+      - CHUINIU_DATABASE_PASSWORD=${MYSQL_PASSWORD}
+      - CHUINIU_DATABASE_DBNAME=chuiniu
+      - CHUINIU_IAM_JWKS_URL=${IAM_JWKS_URL}
+    restart: unless-stopped
