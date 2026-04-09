@@ -70,11 +70,28 @@ func (h *Hub) removeClient(c *Client) {
 	if room == nil {
 		return
 	}
+
+	// During active game, just mark disconnected — don't remove player or room
+	// They'll reconnect from the Game page in a moment
+	if room.Status == game.StatusPlaying {
+		p := room.GetPlayer(c.PlayerID)
+		if p != nil {
+			p.Connected = false
+		}
+		return
+	}
+
 	room.RemovePlayer(c.PlayerID)
 
 	h.BroadcastToRoom(c.RoomID, NewMessage(MsgPlayerLeft, map[string]string{
 		"player_id": c.PlayerID,
 	}))
+
+	// Transfer host if host left
+	if c.PlayerID == room.Host && len(room.Players) > 0 {
+		room.Host = room.Players[0].ID
+		h.BroadcastRoomState(room)
+	}
 
 	if room.IsEmpty() {
 		h.Manager.RemoveRoom(c.RoomID)
