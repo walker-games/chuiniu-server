@@ -69,7 +69,11 @@ func (h *RoomHandler) Join(c *gin.Context) {
 		return
 	}
 
+	// Try invite code first, then room ID
 	room := h.manager.GetRoomByCode(req.Code)
+	if room == nil {
+		room = h.manager.GetRoom(req.Code)
+	}
 	if room == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "room not found"})
 		return
