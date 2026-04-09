@@ -1,0 +1,21 @@
+app:
+  name: chuiniu-server
+  port: 8092
+  env: development
+
+database:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: ""
+  dbname: chuiniu
+  charset: utf8mb4
+
+iam:
+  jwks_url: ""
+
+room:
+  max_players: 8
+  dice_per_player: 5
+  idle_timeout: 30m
+  reconnect_timeout: 30s
