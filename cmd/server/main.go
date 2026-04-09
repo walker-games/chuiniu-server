@@ -8,6 +8,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/walker-games/chuiniu-server/internal/config"
+	"github.com/walker-games/chuiniu-server/internal/model"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -18,6 +21,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("load config: %v", err)
 	}
+
+	dsn := cfg.Database.DSN()
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("connect database: %v", err)
+	}
+	if err := db.AutoMigrate(&model.GameLog{}); err != nil {
+		log.Fatalf("auto migrate: %v", err)
+	}
+	log.Println("database connected and migrated")
 
 	r := gin.Default()
 	r.GET("/health", func(c *gin.Context) {
