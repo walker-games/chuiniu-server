@@ -4,11 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
+	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/walker-games/chuiniu-server/internal/config"
+	"github.com/walker-games/chuiniu-server/internal/game"
+	"github.com/walker-games/chuiniu-server/internal/handler"
 	"github.com/walker-games/chuiniu-server/internal/model"
+	"github.com/walker-games/chuiniu-server/internal/service"
+	"github.com/walker-games/chuiniu-server/internal/ws"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -22,6 +25,7 @@ func main() {
 		log.Fatalf("load config: %v", err)
 	}
 
+	// Database
 	dsn := cfg.Database.DSN()
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -32,10 +36,23 @@ func main() {
 	}
 	log.Println("database connected and migrated")
 
-	r := gin.Default()
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": cfg.App.Name})
-	})
+	// Room Manager
+	idleTimeout, err := time.ParseDuration(cfg.Room.IdleTimeout)
+	if err != nil {
+		idleTimeout = 30 * time.Minute
+		log.Printf("invalid idle_timeout, using default: %v", idleTimeout)
+	}
+	manager := game.NewRoomManager(idleTimeout)
+
+	// GameLog Service
+	logService := service.NewGameLogService(db)
+
+	// WebSocket Hub
+	hub := ws.NewHub(manager, logService)
+	go hub.Run()
+
+	// Router
+	r := handler.SetupRouter(cfg, manager, hub, logService)
 
 	addr := fmt.Sprintf(":%d", cfg.App.Port)
 	log.Printf("starting %s on %s", cfg.App.Name, addr)
