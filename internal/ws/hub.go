@@ -90,8 +90,10 @@ func (h *Hub) removeClient(c *Client) {
 	// Transfer host if host left
 	if c.PlayerID == room.Host && len(room.Players) > 0 {
 		room.Host = room.Players[0].ID
-		h.BroadcastRoomState(room)
 	}
+
+	// Always broadcast updated room state so clients refresh player list
+	h.BroadcastRoomState(room)
 
 	if room.IsEmpty() {
 		h.Manager.RemoveRoom(c.RoomID)
