@@ -149,14 +149,14 @@ func (h *Hub) HandleMessage(c *Client, msg Inbound) {
 	case MsgEmoji:
 		h.handleEmoji(c, msg.Data)
 	default:
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "unknown message type"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeUnknownMessageType, nil))
 	}
 }
 
 func (h *Hub) handleReady(c *Client, data json.RawMessage) {
 	var rd ReadyData
 	if err := json.Unmarshal(data, &rd); err != nil {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "invalid ready data"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeInvalidRequest, nil))
 		return
 	}
 
@@ -191,13 +191,13 @@ func (h *Hub) handleRoll(c *Client) {
 	}
 
 	if room.Round == nil || room.Round.Phase != game.PhaseRolling {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "not in rolling phase"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeNotInRollingPhase, nil))
 		return
 	}
 
 	dice := room.RollDice(c.PlayerID)
 	if dice == nil {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "roll failed"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeRollFailed, nil))
 		return
 	}
 
@@ -219,7 +219,7 @@ func (h *Hub) handleRoll(c *Client) {
 func (h *Hub) handleBid(c *Client, data json.RawMessage) {
 	var bd BidData
 	if err := json.Unmarshal(data, &bd); err != nil {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "invalid bid data"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeInvalidRequest, nil))
 		return
 	}
 
@@ -229,12 +229,12 @@ func (h *Hub) handleBid(c *Client, data json.RawMessage) {
 	}
 
 	if room.Round == nil || room.Round.Phase != game.PhaseBidding {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "not in bidding phase"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeNotInBiddingPhase, nil))
 		return
 	}
 
 	if room.CurrentTurnPlayerID() != c.PlayerID {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "not your turn"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeNotYourTurn, nil))
 		return
 	}
 
@@ -246,7 +246,7 @@ func (h *Hub) handleBid(c *Client, data json.RawMessage) {
 	}
 
 	if err := game.ValidateBid(room.Round.CurrentBid, newBid, len(room.Players), room.Settings.DicePerPlayer); err != nil {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": err.Error()}))
+		c.SendMessage(NewErrorFromGameErr(err))
 		return
 	}
 
@@ -276,12 +276,12 @@ func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
 	}
 
 	if room.Round == nil || room.Round.CurrentBid == nil {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "no bid to challenge"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeNoBidToChallenge, nil))
 		return
 	}
 
 	if room.CurrentTurnPlayerID() != c.PlayerID {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "not your turn"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeNotYourTurn, nil))
 		return
 	}
 
@@ -294,7 +294,9 @@ func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
 	}
 
 	bid := room.Round.CurrentBid
+	log.Printf("[Challenge] bid: %d×%d mode=%s, allDice: %v", bid.Count, bid.Face, bid.Mode, allDice)
 	winner, loser, actualCount := game.ResolveChallenge(c.PlayerID, bid, allDice)
+	log.Printf("[Challenge] result: winner=%s loser=%s actual=%d", winner, loser, actualCount)
 
 	// Pick punishment
 	punishment := game.PickPunishment(room.Settings.Punishments)
@@ -320,9 +322,10 @@ func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
 	}))
 
 	h.BroadcastToRoom(c.RoomID, NewMessage(MsgPunishment, map[string]interface{}{
-		"loser":      loser,
-		"punishment": punishment.Text,
-		"level":      punishment.Level,
+		"loser":           loser,
+		"punishment_key":  punishment.Key,
+		"punishment_text": punishment.Text,
+		"level":           punishment.Level,
 	}))
 
 	h.BroadcastToRoom(c.RoomID, NewMessage(MsgRoundEnd, map[string]interface{}{
@@ -352,7 +355,7 @@ func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
 func (h *Hub) handleEmoji(c *Client, data json.RawMessage) {
 	var ed EmojiData
 	if err := json.Unmarshal(data, &ed); err != nil {
-		c.SendMessage(NewMessage(MsgError, map[string]string{"message": "invalid emoji data"}))
+		c.SendMessage(NewErrorMessage(game.ErrCodeInvalidRequest, nil))
 		return
 	}
 

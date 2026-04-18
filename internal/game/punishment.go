@@ -6,7 +6,7 @@ import "math/rand"
 // If the pool is empty, returns a default "喝一杯" punishment.
 func PickPunishment(pool []Punishment) Punishment {
 	if len(pool) == 0 {
-		return Punishment{Text: "喝一杯", Level: 1, Weight: 100}
+		return Punishment{Key: "punishment.drink1", Text: "喝一杯", Level: 1, Weight: 100}
 	}
 
 	totalWeight := 0

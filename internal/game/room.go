@@ -81,7 +81,8 @@ type RoomSettings struct {
 }
 
 type Punishment struct {
-	Text   string `json:"text"`
+	Key    string `json:"key"`
+	Text   string `json:"text"` // 保留以兼容旧客户端；新客户端优先用 Key
 	Level  int    `json:"level"`
 	Weight int    `json:"weight"`
 }
@@ -93,11 +94,11 @@ func DefaultSettings() RoomSettings {
 		MaxPlayers:    8,
 		DicePerPlayer: 5,
 		Punishments: []Punishment{
-			{Text: "飲一杯", Level: 1, Weight: 40},
-			{Text: "飲兩杯", Level: 2, Weight: 20},
-			{Text: "真心話", Level: 1, Weight: 20},
-			{Text: "大冒險", Level: 2, Weight: 15},
-			{Text: "連飲三杯", Level: 3, Weight: 5},
+			{Key: "punishment.drink1", Text: "飲一杯", Level: 1, Weight: 40},
+			{Key: "punishment.drink2", Text: "飲兩杯", Level: 2, Weight: 20},
+			{Key: "punishment.truth", Text: "真心話", Level: 1, Weight: 20},
+			{Key: "punishment.dare", Text: "大冒險", Level: 2, Weight: 15},
+			{Key: "punishment.drink3", Text: "連飲三杯", Level: 3, Weight: 5},
 		},
 	}
 }
