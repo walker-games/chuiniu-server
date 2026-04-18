@@ -294,7 +294,9 @@ func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
 	}
 
 	bid := room.Round.CurrentBid
+	log.Printf("[Challenge] bid: %d×%d mode=%s, allDice: %v", bid.Count, bid.Face, bid.Mode, allDice)
 	winner, loser, actualCount := game.ResolveChallenge(c.PlayerID, bid, allDice)
+	log.Printf("[Challenge] result: winner=%s loser=%s actual=%d", winner, loser, actualCount)
 
 	// Pick punishment
 	punishment := game.PickPunishment(room.Settings.Punishments)
