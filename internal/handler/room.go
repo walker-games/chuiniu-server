@@ -20,7 +20,7 @@ func (h *RoomHandler) Create(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	username := middleware.GetUsername(c)
 	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not identified"})
+		RespondError(c, http.StatusUnauthorized, game.ErrCodeUnauthorized, nil)
 		return
 	}
 
@@ -46,7 +46,7 @@ func (h *RoomHandler) Get(c *gin.Context) {
 	roomID := c.Param("id")
 	room := h.manager.GetRoom(roomID)
 	if room == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "room not found"})
+		RespondError(c, http.StatusNotFound, game.ErrCodeRoomNotFound, nil)
 		return
 	}
 
@@ -68,7 +68,7 @@ type JoinRequest struct {
 func (h *RoomHandler) Join(c *gin.Context) {
 	var req JoinRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "code is required"})
+		RespondError(c, http.StatusBadRequest, game.ErrCodeInvalidRequest, nil)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *RoomHandler) Join(c *gin.Context) {
 		username = req.Name
 	}
 	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not identified"})
+		RespondError(c, http.StatusUnauthorized, game.ErrCodeUnauthorized, nil)
 		return
 	}
 
@@ -88,13 +88,13 @@ func (h *RoomHandler) Join(c *gin.Context) {
 		room = h.manager.GetRoom(req.Code)
 	}
 	if room == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "room not found"})
+		RespondError(c, http.StatusNotFound, game.ErrCodeRoomNotFound, nil)
 		return
 	}
 
 	avatar := ""
 	if err := room.AddPlayer(userID, username, avatar); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		RespondGameError(c, http.StatusBadRequest, err)
 		return
 	}
 
