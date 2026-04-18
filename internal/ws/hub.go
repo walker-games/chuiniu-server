@@ -322,9 +322,10 @@ func (h *Hub) handleChallenge(c *Client, data json.RawMessage) {
 	}))
 
 	h.BroadcastToRoom(c.RoomID, NewMessage(MsgPunishment, map[string]interface{}{
-		"loser":      loser,
-		"punishment": punishment.Text,
-		"level":      punishment.Level,
+		"loser":           loser,
+		"punishment_key":  punishment.Key,
+		"punishment_text": punishment.Text,
+		"level":           punishment.Level,
 	}))
 
 	h.BroadcastToRoom(c.RoomID, NewMessage(MsgRoundEnd, map[string]interface{}{
